@@ -1,0 +1,237 @@
+<title>Belanja AMS Bimasakti</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=Saira+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: satu kolom sempit seperti nota belanja; tiap toko = satu blok daftar; angka rata kanan, monospace */
+:root {
+  --bg: #f6f7f4;
+  --panel: #ffffff;
+  --fg: #1d2420;
+  --muted: #5d6a62;
+  --line: #d9ded8;
+  --copper: #a8541f;
+  --copper-soft: #f4e6db;
+  --mask: #1f5c3a;
+  --mask-soft: #e3efe7;
+  --warn: #9a3412;
+  --warn-soft: #fdecdf;
+  --done: #8a958e;
+  --f-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111814; --panel: #18211c; --fg: #e3e9e4; --muted: #9aa89f; --line: #2c3a32;
+    --copper: #e08a4f; --copper-soft: #33241a; --mask: #6cc795; --mask-soft: #1c3427;
+    --warn: #f0965c; --warn-soft: #3a2116; --done: #6a776f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111814; --panel: #18211c; --fg: #e3e9e4; --muted: #9aa89f; --line: #2c3a32;
+  --copper: #e08a4f; --copper-soft: #33241a; --mask: #6cc795; --mask-soft: #1c3427;
+  --warn: #f0965c; --warn-soft: #3a2116; --done: #6a776f; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 20px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--f-display); font-size: 40px; line-height: 1; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+h2 { font-family: var(--f-display); font-size: 24px; margin: 0; letter-spacing: .02em; }
+.sum { display: flex; flex-wrap: wrap; gap: 8px 18px; font-family: var(--f-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sum b { color: var(--fg); font-weight: 600; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--mask); transition: width .2s; }
+.alert { background: var(--warn-soft); border-left: 4px solid var(--warn); padding: 12px 14px; border-radius: 4px; display: grid; gap: 6px; }
+.alert strong { color: var(--warn); }
+.alert p, .note p { margin: 0; }
+.store { display: grid; gap: 8px; }
+.store-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; border-bottom: 2px solid var(--fg); padding-bottom: 4px; }
+.store-head .meta { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+ul.items { list-style: none; margin: 0; padding: 0; display: grid; }
+li.item { display: grid; grid-template-columns: 26px 1fr auto; gap: 2px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: start; }
+li.item input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--mask); }
+li.item input:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+.name { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.name a { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.name a:hover { text-decoration-color: var(--copper); }
+.qty { font-family: var(--f-mono); font-size: 13px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.qty .n { display: inline-block; min-width: 2.6em; padding: 1px 6px; background: var(--copper-soft); color: var(--copper); border-radius: 3px; font-weight: 600; text-align: center; }
+.qty .rp { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.why { grid-column: 2 / 4; color: var(--muted); font-size: 14px; min-width: 0; }
+.tag { display: inline-block; font-family: var(--f-mono); font-size: 11px; padding: 0 5px; border-radius: 3px; margin-right: 4px; vertical-align: 1px; }
+.tag.opt { background: var(--mask-soft); color: var(--mask); }
+.tag.chk { background: var(--warn-soft); color: var(--warn); }
+.tag.p1 { background: var(--copper-soft); color: var(--copper); }
+li.item.done .name, li.item.done .why, li.item.done .qty { color: var(--done); }
+li.item.done .name { text-decoration: line-through; }
+li.item.done .qty .n { background: transparent; color: var(--done); }
+.note { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: grid; gap: 8px; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.small { font-size: 13px; color: var(--muted); }
+code, .mono { font-family: var(--f-mono); font-size: .92em; }
+button.reset { justify-self: start; font: inherit; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+button.reset:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+@media (max-width: 420px) { h1 { font-size: 34px; } }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Tugas AMS · belanja Rab–Kam 4–5 Nov 2026 · stok dicek Sel 3 Nov ±20.30 · versi 2</div>
+    <h1>Belanja AMS</h1>
+    <div class="sum" id="sum"></div>
+    <div class="bar" aria-hidden="true"><i id="barfill"></i></div>
+  </header>
+
+  <section class="alert" aria-label="Peringatan stok">
+    <p><strong>Pesan online hari ini (Rab): transceiver CAN.</strong> SN65HVD230, TJA1050, dan modul MCP2551/MCP2515 kosong di Jogjarobotika dan Beetrona. Kalau senior tidak meminjami, cari <span class="mono">"SN65HVD230 CAN module"</span> (3,3 V) ×2 supaya tiba Jum–Sab. Pengganti: <span class="mono">"TJA1050 CAN module"</span> (5 V; PCB disiapkan untuk keduanya).</p>
+    <p class="small">Versi 2 (Rab 4 Nov 03.30): papan PCB hanya berisi AMS. 14 trimpot pengganti NTC dan pot arus dipasang di <b>breadboard</b>, disambung ke PCB lewat kabel jumper. Tanda <span class="tag p1">percobaan</span> = boleh dibeli duluan untuk latihan sambil belajar.</p>
+  </section>
+
+  <div id="stores"></div>
+
+  <section class="note">
+    <h2>Cek di toko sebelum bayar</h2>
+    <ul>
+      <li><b>Blue Pill</b>: baca tulisan di chip. Idealnya <span class="mono">STM32F103C8T6</span>. Kalau tertulis CKS32, CS32, atau GD32, tetap beli tetapi foto tulisannya dan kirim ke aku (perlu setelan khusus di STM32CubeIDE).</li>
+      <li><b>2N2222</b>: foto tulisan di badannya (mis. <span class="mono">PN2222A</span> atau <span class="mono">2N2222A</span>). Urutan kaki beda antar pabrik, jadi kita pastikan dengan multimeter mode dioda sebelum disolder.</li>
+      <li><b>Relay HRS2H</b>: harus 8 kaki (DPDT). Kaki kedua dipakai untuk latch dan lampu AMS.</li>
+      <li><b>74HC4051</b>: bentuk DIP 16 kaki (bukan SMD). Kalau habis, <span class="mono">CD4051 DIP</span> juga bisa.</li>
+      <li><b>Trimpot 3296W</b>: kode di badan <span class="mono">103</span> = 10 kΩ.</li>
+      <li><b>PCB polos</b>: pilih yang satu sisi (single side) dan tembaganya tidak bergores dalam.</li>
+    </ul>
+  </section>
+
+  <section class="note">
+    <h2>Kenapa jumlahnya segini</h2>
+    <ul>
+      <li>14 kanal NTC × (1 trimpot di breadboard + 1 resistor 10k dan 1 kapasitor 100 nF di PCB).</li>
+      <li>Sensor arus: 1 trimpot + pembagi 10k/10k. Monitor 5 V: pembagi 10k/10k.</li>
+      <li>Cadangan: Blue Pill, relay, 74HC4051, dan PCB polos dibeli lebih karena paling mungkin rusak atau gagal etsa.</li>
+      <li>Harga dari situs toko 3 Nov; harga di kasir bisa beda sedikit.</li>
+    </ul>
+    <button class="reset" id="reset" type="button">Kosongkan semua centang</button>
+  </section>
+</div>
+
+<script>
+const BEE = s => 'https://tokobeetrona.com/?s=' + encodeURIComponent(s) + '&post_type=product';
+const JR = s => 'https://www.jogjarobotika.com/pencarian?q=' + encodeURIComponent(s);
+const STORES = [
+  { id: 'bee', name: 'Toko Beetrona', meta: 'tokobeetrona.com', link: BEE, items: [
+    ['STM32F103C8T6 ARM STM32 Minimum System Board Module', 'stm32', 2, 55500, 'Blue Pill: 1 dipakai + 1 cadangan. Jogjarobotika hanya punya versi C6T6 (memori separuh).', 'p1'],
+    ['PCB Polos FR4 10×15 cm Single Side', 'pcb polos', 3, 10000, '1 papan jadi + 2 cadangan bila toner atau etsa gagal.'],
+    ['Mata Bor CNC 0.8mm Drill Bit', 'mata bor', 2, 5500, 'Lubang kaki resistor, IC, trimpot. Cek dulu muat di bor bengkel.', 'chk'],
+    ['Matabor PCB HSS 1 mm', 'mata bor', 3, 900, 'Lubang header, 7805, relay, dioda. Mata bor kecil mudah patah, jadi beli lebih.'],
+    ['Matabor PCB HSS 1.5 mm', 'mata bor', 1, 2000, 'Kaki terminal block dan dudukan sekring.'],
+  ]},
+  { id: 'jr', name: 'Jogjarobotika', meta: 'jogjarobotika.com', link: JR, items: [
+    ['ST-LINK/V2 STM8 STM32 Downloader', 'st-link', 1, 25000, 'Alat isi program ke Blue Pill. Stok tinggal 7; Beetrona juga ada (Rp32.000).', 'p1'],
+    ['CP2102 USB to TTL', 'cp2102', 1, 25000, 'Menampilkan 15 nilai di laptop. Lewati kalau sudah punya USB-TTL.', 'p1'],
+    ['74HC4051 DIP', '74hc4051', 3, 3500, 'Mux 8 kanal: 2 dipakai (14 NTC + 2 kanal cek) + 1 cadangan.', 'p1'],
+    ['Soket IC 16 Pin', 'soket ic', 2, 600, 'IC tidak disolder langsung, jadi bisa diganti.'],
+    ['Relay HKE HRS2H-S-DC12V 8P', 'relay 12v', 2, 8500, 'Relay DPDT: kutub 1 = SDC, kutub 2 = latch + lampu AMS. 1 cadangan.'],
+    ['2N2222 NPN Transistor TO-92', '2n2222', 3, 250, 'Penggerak relay. BC548 kosong.'],
+    ['7805 L7805CV TO-220', '7805', 2, 1700, 'Regulator 12 V → 5 V. 1 cadangan.'],
+    ['1N5819 Rectifier Diode', '1n5819', 3, 300, 'Pelindung bila kabel 12 V terbalik.'],
+    ['1N4007 Rectifier Diode', '1n4007', 3, 150, 'Dioda flyback kumparan relay.'],
+    ['BLX-A PCB Mount 5x20mm Fuse Holder', 'fuse holder', 1, 700, 'Dudukan sekring di PCB.'],
+    ['5x20mm Glass Tube Fuse 1A 250V', 'fuse 5x20', 3, 250, 'Sekring masukan 12 V.'],
+    ['10K Ohm 3296W Multi Turn Top Adjust', '3296', 17, 1800, 'Dipasang di breadboard: 14 pengganti NTC + 1 sensor arus + 2 cadangan.', 'p1'],
+    ['10K Ohm 1/4 Watt Metal Film Resistor 1%', '10k 1/4 watt', 30, 100, '14 pull-up NTC + 4 pembagi + pull-down basis + cadangan.', 'p1'],
+    ['1K Ohm 1/4Watt Carbon Film Resistor', '1K Ohm 1/4Watt', 10, 50, 'Resistor basis transistor dan LED PWR.'],
+    ['2K2 Ohm 1/4Watt Carbon Film Resistor', '2K2 Ohm 1/4Watt', 5, 50, 'Resistor LED AMS dari 12 V.'],
+    ['4K7 Ohm 1/4Watt Carbon Film Resistor', '4K7 Ohm 1/4Watt', 5, 50, 'Pull-up TX bila transceiver yang didapat versi 5 V.'],
+    ['104 100nF Ceramic Capacitor', '100nf', 30, 100, '14 kanal NTC + 2 pembagi + IC + regulator + cadangan.', 'p1'],
+    ['Kapasitor Elco 100uF/25V', 'elco 100uf', 4, 600, 'Masukan dan keluaran 7805.'],
+    ['LED 5mm Merah', 'led 5mm merah', 3, 200, 'Lampu "AMS" (menyala saat trip).'],
+    ['LED 3mm Hijau', 'led 3mm', 3, 150, 'Lampu PWR 5 V.'],
+    ['Tact Switch DIP 4 Kaki 6x6x5MM', 'tactile 6x6', 3, 250, 'Tombol AMS RESET (lepas latch).'],
+    ['1x40 Pin Female Header Single Row (2.54 mm)', 'female header', 4, 1500, '2 untuk dudukan Blue Pill (2×20), sisanya modul CAN dan cadangan.'],
+    ['1x40 Pin Male Header Single Row (2.54 mm)', '1x40 pin header male', 2, 1000, 'Konektor PCB: 16 pin NTC, 3 pin arus, 4 pin CAN, 3 pin UART, 3 pin pilih VCAN.'],
+    ['2 Pin Jumper (jumper cap)', 'jumper', 4, 250, 'Pilih tegangan modul CAN (3,3 V / 5 V) + cadangan.'],
+    ['Kabel Jumper 10 Cm Male-Female Ecer', 'kabel jumper', 20, 400, 'Header PCB ke breadboard: 14 NTC + 3 arus + cadangan.', 'p1'],
+    ['Terminal Block 5.08mm HT5.08-2P + Socket', 'terminal 5.08', 3, 2000, '12 V masuk, keluaran SDC, cadangan.'],
+    ['Kabel Jumper Female to Female 9p 20cm', 'kabel jumper female female', 1, 6500, 'Modul CAN dan USB-TTL ke header PCB.'],
+    ['Spidol Marker Permanent Snowman OPF (fine)', 'spidol', 1, 10000, 'Menambal jalur toner yang terkelupas sebelum etsa.'],
+    ['Amplas Taiyo grit 1000', 'amplas', 2, 1500, 'Membersihkan tembaga sebelum toner ditempel.'],
+    ['NTC Thermistor Waterproof Probe 10K 1%', 'ntc 10k', 2, 6000, 'Bukti sensor asli bekerja (dipasang di pin 2–3 satu kanal). Stok tinggal 3.', 'opt'],
+  ]},
+  { id: 'online', name: 'Online (pesan Rab)', meta: 'Tokopedia/Shopee · tiba ±2–3 hari', link: null, items: [
+    ['Modul SN65HVD230 CAN transceiver', null, 2, 0, 'Wajib untuk fungsi CAN bila senior tidak meminjami. 1 untuk AMS, 1 untuk membuat pengirim tiruan dari Blue Pill cadangan.', 'chk'],
+    ['USB Logic Analyzer 8CH 24MHz', null, 1, 0, 'Sangat disarankan (±Rp80–100 rb). Bengkel tanpa osiloskop; alat ini + PulseView bisa membaca frame CAN langsung dari kaki RX transceiver, terpisah dari firmware-mu. Jogjarobotika kosong.', 'opt'],
+  ]},
+  { id: 'luar', name: 'Di luar dua toko', meta: 'jasa cetak · apotek · minimarket', link: null, items: [
+    ['Cetak toner di printer laser (jasa cetak)', null, 2, 0, 'Bukan sekarang: tunggu file PDF layout dariku. Kertas foto glossy tipis atau art paper; printer laser, bukan inkjet.'],
+    ['Aseton (pembersih kutek) atau tiner', null, 1, 0, 'Menghapus toner setelah etsa.'],
+    ['Sabut cuci piring hijau', null, 1, 0, 'Menggosok tembaga sampai mengilap sebelum setrika.'],
+    ['Wadah plastik datar + sarung tangan karet', null, 1, 0, 'Untuk etsa FeCl3 (korosif, jangan wadah logam).'],
+  ]},
+  { id: 'cek', name: 'Cek dulu, mungkin sudah ada', meta: 'punya sendiri · bengkel', link: null, items: [
+    ['Adaptor 12 V ≥ 1 A + kabel', null, 1, 0, 'Catu papan saat uji (bengkel tidak punya PSU). Beetrona Rp32.000 bila belum punya.', 'chk'],
+    ['FeCl3', null, 1, 0, 'Dibeli bersama (kata senior). Jogjarobotika Rp7.000 bila perlu sendiri.'],
+    ['Setrika, bor mini, gunting PCB/gergaji', null, 1, 0, 'Alat besar di bengkel; pastikan mata bor 0,8 mm muat di chuck-nya.', 'chk'],
+    ['Breadboard MB-102 ×2 + kabel jumper + multimeter + solder', null, 1, 0, 'Dari proyek BSPD. Breadboard menampung 15 trimpot sensor dan dipakai uji firmware sebelum PCB jadi.'],
+    ['Masker', null, 1, 0, 'Uap FeCl3 berbau; etsa di tempat terbuka.'],
+  ]},
+];
+
+const KEY = 'ams-belanja-v1';
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const rp = n => 'Rp' + n.toLocaleString('id-ID');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function render() {
+  const root = document.getElementById('stores');
+  root.innerHTML = '';
+  STORES.forEach(st => {
+    const sec = document.createElement('section');
+    sec.className = 'store';
+    const total = st.items.reduce((a, it) => a + it[2] * it[3], 0);
+    sec.innerHTML = '<div class="store-head"><h2>' + esc(st.name) + '</h2><span class="meta">' + esc(st.meta) +
+      (total ? ' · ±' + rp(total) : '') + '</span></div>';
+    const ul = document.createElement('ul');
+    ul.className = 'items';
+    st.items.forEach((it, i) => {
+      const [name, q, n, price, why, tag] = it;
+      const id = st.id + '-' + i;
+      const li = document.createElement('li');
+      li.className = 'item' + (state[id] ? ' done' : '');
+      const label = st.link && q ? '<a href="' + st.link(q) + '" target="_blank" rel="noopener">' + esc(name) + '</a>' : esc(name);
+      const tg = tag === 'opt' ? '<span class="tag opt">opsional</span>' : tag === 'chk' ? '<span class="tag chk">cek dulu</span>' : tag === 'p1' ? '<span class="tag p1">percobaan</span>' : '';
+      li.innerHTML = '<input type="checkbox" id="' + id + '"' + (state[id] ? ' checked' : '') + ' aria-label="Sudah dibeli: ' + esc(name) + '">' +
+        '<label class="name" for="' + id + '">' + label + '</label>' +
+        '<div class="qty"><span class="n">×' + n + '</span>' + (price ? '<span class="rp">' + rp(n * price) + '</span>' : '') + '</div>' +
+        '<div class="why">' + tg + esc(why) + '</div>';
+      li.querySelector('input').addEventListener('change', e => {
+        state[id] = e.target.checked; save();
+        li.classList.toggle('done', e.target.checked); summary();
+      });
+      ul.appendChild(li);
+    });
+    sec.appendChild(ul);
+    root.appendChild(sec);
+  });
+  summary();
+}
+function summary() {
+  let all = 0, done = 0, total = 0, left = 0;
+  STORES.forEach(st => st.items.forEach((it, i) => {
+    const id = st.id + '-' + i; all++;
+    total += it[2] * it[3];
+    if (state[id]) done++; else left += it[2] * it[3];
+  }));
+  document.getElementById('sum').innerHTML =
+    '<span>Perkiraan total <b>' + rp(total) + '</b></span>' +
+    '<span>Sisa belum dibeli <b>' + rp(left) + '</b></span>' +
+    '<span>Tercentang <b>' + done + '/' + all + '</b></span>';
+  document.getElementById('barfill').style.width = (all ? done / all * 100 : 0) + '%';
+}
+document.getElementById('reset').addEventListener('click', () => { state = {}; save(); render(); });
+render();
+</script>
